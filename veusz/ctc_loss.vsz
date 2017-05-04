@@ -1,5 +1,5 @@
 # Veusz saved document (version 1.24)
-# Saved at 2017-05-04T06:20:33.794987
+# Saved at 2017-05-04T06:36:51.455848
 
 AddImportPath(u'/Users/philipperemy/PycharmProjects/tensorflow-ctc-speech-recognition/veusz')
 ImportFileCSV(u'../out.tsv', delimiter=' ', linked=True, dsprefix=u'r4_')
@@ -12,13 +12,13 @@ To('graph1')
 Add('axis', name='x', autoadd=False)
 To('x')
 Set('label', u'Gradient Steps')
-Set('max', 1700.0)
+Set('max', 'Auto')
 To('..')
 Add('axis', name='y', autoadd=False)
 To('y')
 Set('label', u'CTC Loss')
 Set('max', 'Auto')
-Set('log', False)
+Set('log', True)
 Set('direction', 'vertical')
 Set('Line/color', u'black')
 To('..')

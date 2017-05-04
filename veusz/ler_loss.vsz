@@ -1,5 +1,5 @@
 # Veusz saved document (version 1.24)
-# Saved at 2017-05-04T06:20:38.776393
+# Saved at 2017-05-04T06:35:45.205948
 
 AddImportPath(u'/Users/philipperemy/PycharmProjects/tensorflow-ctc-speech-recognition/veusz')
 ImportFileCSV(u'../out.tsv', delimiter=' ', linked=True, dsprefix=u'r4_')
@@ -12,7 +12,7 @@ To('graph1')
 Add('axis', name='x', autoadd=False)
 To('x')
 Set('label', u'Gradient Steps')
-Set('max', 1700.0)
+Set('max', 'Auto')
 To('..')
 Add('axis', name='y', autoadd=False)
 To('y')
