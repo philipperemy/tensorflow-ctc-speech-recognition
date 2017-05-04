@@ -1,0 +1,7 @@
+dill
+librosa
+namedtupled
+numpy
+python_speech_features
+tensorflow
+progressbar2
