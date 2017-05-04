@@ -2,7 +2,19 @@
 - Application of Connectionist Temporal Classification (CTC) for Speech Recognition (Tensorflow 1.0) 
 - On the VCTK Corpus (same corpus as the one used by WaveNet).
 
+## How to get started?
+```
+git clone https://github.com/philipperemy/tensorflow-ctc-speech-recognition.git ctc-speech
+cd ctc-speech
+# Download the VCTK Corpus here: http://homepages.inf.ed.ac.uk/jyamagis/page3/page58/page58.html
+wget http://homepages.inf.ed.ac.uk/jyamagis/release/VCTK-Corpus.tar.gz # 10GB!
+python3 generate_audio_cache.py
+python3 ctc_tensorflow_example.py # to run the experiment defined in the section First Experiment.
+```
+
 ## First experiment
+
+http://homepages.inf.ed.ac.uk/jyamagis/release/VCTK-Corpus.tar.gz
 
 ### Set up
 Speech Recognition is a very difficult topic. In this first experiment, we consider:
