@@ -6,15 +6,22 @@
 ```
 git clone https://github.com/philipperemy/tensorflow-ctc-speech-recognition.git ctc-speech
 cd ctc-speech
+sudo pip3 install -r requirements.txt
 # Download the VCTK Corpus here: http://homepages.inf.ed.ac.uk/jyamagis/page3/page58/page58.html
 wget http://homepages.inf.ed.ac.uk/jyamagis/release/VCTK-Corpus.tar.gz # 10GB!
 python3 generate_audio_cache.py
 python3 ctc_tensorflow_example.py # to run the experiment defined in the section First Experiment.
 ```
+## Requirements
+- **dill**: improved version of pickle
+- **librosa**: library to interact with audio wav files
+- **namedtupled**: dictionary to named tuples
+- **numpy**: scientific library
+- **python_speech_features**: extracting relevant features from raw audio data
+- **tensorflow**: machine learning library
+- **progressbar2**: progression bar
 
 ## First experiment
-
-http://homepages.inf.ed.ac.uk/jyamagis/release/VCTK-Corpus.tar.gz
 
 ### Set up
 Speech Recognition is a very difficult topic. In this first experiment, we consider:
