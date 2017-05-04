@@ -72,3 +72,4 @@ data/
 # Created by .ignore support plugin (hsz.mobi)
 .gitignore
 nohup.out
+*works*py*

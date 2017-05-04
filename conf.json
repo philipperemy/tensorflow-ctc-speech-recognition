@@ -1,0 +1,6 @@
+{
+  "AUDIO": {
+    "SAMPLE_RATE": 8000,
+    "VCTK_CORPUS_PATH": "/Volumes/Transcend/VCTK-Corpus/"
+  }
+}
