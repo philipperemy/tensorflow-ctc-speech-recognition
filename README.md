@@ -9,6 +9,11 @@ Speech Recognition is a very difficult topic. In this first experiment, we consi
 - A very small subset of the VCTK Corpus composed of only one speaker: p225.
 - Only 5 sentences of this speaker, denoted as: 001, 002, 003, 004 and 005.
 
+The network is defined as:
+- `rnn.LSTMCell` with one layer of 100 units completed by a softmax.
+- Batch size of 1.
+- Momentum Optimizer with learning rate of 0.005 and momentum of 0.9
+
 The validation set is obtained by constantly truncating the audio files randomly at the beginning (between 0 and 125ms max). We make sure that we do not cut when the speaker is speaking. Using 5 unseen sentences would be more realistic, however, it's almost impossible for the network to pick it up since a training set of only 5 sentences is way too small to cover all the possible phonemes of the english language. By truncating randomly the silences at the beginning, we make sure that the network does not learn the mapping audio from sentence -> text in a dumb way.
 
 ### Results
