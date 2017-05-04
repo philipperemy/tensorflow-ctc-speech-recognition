@@ -5,6 +5,7 @@ import tensorflow as tf
 
 from audio_reader import AudioReader
 from constants import c
+from file_logger import FileLogger
 from utils import FIRST_INDEX
 
 # Some configs
@@ -23,6 +24,13 @@ num_batches_per_epoch = int(num_examples / batch_size)
 
 audio = AudioReader(audio_dir=c.AUDIO.VCTK_CORPUS_PATH,
                     sample_rate=c.AUDIO.SAMPLE_RATE)
+
+file_logger = FileLogger('out.tsv', ['curr_epoch',
+                                     'train_cost',
+                                     'train_ler',
+                                     'val_cost',
+                                     'val_ler',
+                                     'random_shift'])
 
 
 def run_ctc():
@@ -118,7 +126,7 @@ def run_ctc():
         train_inputs, train_targets, train_seq_len, original = convert_inputs_to_ctc_format(truncated_audio,
                                                                                             c.AUDIO.SAMPLE_RATE,
                                                                                             target_text)
-        return train_inputs, train_targets, train_seq_len, original
+        return train_inputs, train_targets, train_seq_len, original, random_shift
 
     with tf.Session(graph=graph) as session:
 
@@ -152,7 +160,7 @@ def run_ctc():
             train_cost /= num_examples
             train_ler /= num_examples
 
-            val_inputs, val_targets, val_seq_len, val_original = next_testing_batch()
+            val_inputs, val_targets, val_seq_len, val_original, random_shift = next_testing_batch()
             val_feed = {inputs: val_inputs,
                         targets: val_targets,
                         seq_len: val_seq_len}
@@ -172,6 +180,14 @@ def run_ctc():
 
             log = "Epoch {}/{}, train_cost = {:.3f}, train_ler = {:.3f}, " \
                   "val_cost = {:.3f}, val_ler = {:.3f}, time = {:.3f}"
+
+            file_logger.write([curr_epoch + 1,
+                               train_cost,
+                               train_ler,
+                               val_cost,
+                               val_ler,
+                               random_shift])
+
             print(log.format(curr_epoch + 1, num_epochs, train_cost, train_ler,
                              val_cost, val_ler, time.time() - start))
 
