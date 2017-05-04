@@ -10,15 +10,17 @@ Speech Recognition is a very difficult topic. In this first experiment, we consi
 - Only 5 sentences of this speaker, denoted as: 001, 002, 003, 004 and 005.
 
 The network is defined as:
-- `rnn.LSTMCell` with one layer of 100 units completed by a softmax.
+- One LSTM layer `rnn.LSTMCell` with 100 units, completed by a softmax.
 - Batch size of 1.
-- Momentum Optimizer with learning rate of 0.005 and momentum of 0.9
+- Momentum Optimizer with learning rate of 0.005 and momentum of 0.9.
 
 The validation set is obtained by constantly truncating the audio files randomly at the beginning (between 0 and 125ms max). We make sure that we do not cut when the speaker is speaking. Using 5 unseen sentences would be more realistic, however, it's almost impossible for the network to pick it up since a training set of only 5 sentences is way too small to cover all the possible phonemes of the english language. By truncating randomly the silences at the beginning, we make sure that the network does not learn the mapping audio from sentence -> text in a dumb way.
 
 ### Results
 
-Most of the time, the network can guess the correct sentence.
+Most of the time, the network can guess the correct sentence. Sometimes, it misses a bit but still encouraging.
+
+Example 1
 ```
 Original training: diving is no part of football
 Decoded training: diving is no part of football
@@ -27,6 +29,7 @@ Decoded validation: thers still a bl to go
 Epoch 3074/10000, train_cost = 0.032, train_ler = 0.000, val_cost = 9.131, val_ler = 0.125, time = 1.648
 ```
 
+Example 2
 ```
 Original training: three hours later the man was free
 Decoded training: three hours later the man was free
@@ -35,7 +38,7 @@ Decoded val: nand they ere being paid
 Epoch 3104/10000, train_cost = 0.075, train_ler = 0.000, val_cost = 2.945, val_ler = 0.077, time = 1.042
 ```
 
-Sometimes, it misses a bit but still encouraging.
+Example 3
 ```
 Original training: theres still a bit to go
 Decoded training: theres still a bit to go
