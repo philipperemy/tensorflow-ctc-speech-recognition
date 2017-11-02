@@ -12,6 +12,9 @@ wget http://homepages.inf.ed.ac.uk/jyamagis/release/VCTK-Corpus.tar.gz # 10GB!
 python3 generate_audio_cache.py
 python3 ctc_tensorflow_example.py # to run the experiment defined in the section First Experiment.
 ```
+
+You can also download only the relevant files here [https://www.dropbox.com/s/xecprghgwbbuk3m/vctk-pc225.tar.gz?dl=1](https://www.dropbox.com/s/xecprghgwbbuk3m/vctk-pc225.tar.gz?dl=1) (~69MB). Thanks to @Burak Bayramli.
+
 ## Requirements
 - **dill**: improved version of pickle
 - **librosa**: library to interact with audio wav files
