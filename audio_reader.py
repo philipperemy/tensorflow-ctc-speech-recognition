@@ -56,7 +56,7 @@ class AudioReader(object):
         if len(find_files(TMP_DIR, pattern='*.pkl')) == 0:  # generate all the pickle files.
             print('Nothing found at {}. Generating all the caches now.'.format(TMP_DIR))
             files = find_files(audio_dir)
-            assert len(files) != 0, 'Generate your cache please.'
+            assert len(files) != 0, 'Cannot find any VCTK files there. Are you sure audio_dir is correct?'
             print('Found {} files in total in {}.'.format(len(files), audio_dir))
             if speakers_sub_list is not None:
                 files = list(
