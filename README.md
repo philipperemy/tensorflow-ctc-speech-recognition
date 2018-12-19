@@ -3,7 +3,7 @@
 - On the VCTK Corpus (same corpus as the one used by WaveNet).
 
 ## How to get started?
-```
+```bash
 git clone https://github.com/philipperemy/tensorflow-ctc-speech-recognition.git ctc-speech
 cd ctc-speech
 sudo pip3 install -r requirements.txt
