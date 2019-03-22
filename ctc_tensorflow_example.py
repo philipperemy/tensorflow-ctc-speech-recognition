@@ -40,7 +40,7 @@ def next_batch(train=True):
     random_index = random.choice(list(audio.cache.keys())[0:5])
     training_element = audio.cache[random_index]
     target_text = training_element['target']
-    if train:
+    if not train:
         l_shift = np.random.randint(low=1, high=1000)
         audio_buffer = training_element['audio'][l_shift:]
     else:
