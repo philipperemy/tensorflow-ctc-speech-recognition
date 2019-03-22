@@ -11,7 +11,7 @@ from utils import convert_inputs_to_ctc_format
 
 sample_rate = 8000
 # Some configs
-num_features = 13
+num_features = 13  # log filter bank or MFCC features
 # Accounting the 0th index +  space + blank label = 28 characters
 num_classes = ord('z') - ord('a') + 1 + 1 + 1
 
@@ -47,7 +47,8 @@ def next_batch(train=True):
         audio_buffer = training_element['audio']
     x, y, seq_len, original = convert_inputs_to_ctc_format(audio_buffer,
                                                            sample_rate,
-                                                           target_text)
+                                                           target_text,
+                                                           num_features)
     return x, y, seq_len, original
 
 
