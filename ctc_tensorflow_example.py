@@ -40,11 +40,11 @@ def next_batch(bs=batch_size, train=True):
     for k in range(bs):
         ut_length_dict = dict([(k, len(v['target'])) for (k, v) in audio.cache.items()])
         utterances = sorted(ut_length_dict.items(), key=operator.itemgetter(1))
-        max_utterances = 500
+        test_index = 15
         if train:
-            utterances = [a[0] for a in utterances[5:5 + max_utterances]]
+            utterances = [a[0] for a in utterances[test_index:]]
         else:
-            utterances = [a[0] for a in utterances[0:5]]
+            utterances = [a[0] for a in utterances[:test_index]]
         random_utterance = random.choice(utterances)
         training_element = audio.cache[random_utterance]
         target_text = training_element['target']
