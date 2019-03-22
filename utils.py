@@ -10,16 +10,18 @@ SPACE_INDEX = 0
 FIRST_INDEX = ord('a') - 1  # 0 is reserved to space
 
 
-def convert_inputs_to_ctc_format(audio, fs, target_text):
+def convert_inputs_to_ctc_format(audio, fs, target_text, num_features):
     # print(target_text)
-    inputs = mfcc(audio, samplerate=fs)
+    inputs = mfcc(audio, samplerate=fs, numcep=num_features)
     # Transform in 3D array
     train_inputs = np.asarray(inputs[np.newaxis, :])
     train_inputs = (train_inputs - np.mean(train_inputs)) / np.std(train_inputs)
     train_seq_len = [train_inputs.shape[1]]
 
     # Get only the words between [a-z] and replace period for none
-    original = ' '.join(target_text.strip().lower().split(' ')).replace('.', '').replace('?', '').replace(',', '').replace("'", '').replace('!', '').replace('-', '')
+    original = ' '.join(target_text.strip().lower().split(' ')).replace('.', '').replace('?', '').replace(',',
+                                                                                                          '').replace(
+        "'", '').replace('!', '').replace('-', '')
     # print(original)
     targets = original.replace(' ', '  ')
     targets = targets.split(' ')
