@@ -20,7 +20,7 @@ num_classes = ord('z') - ord('a') + 1 + 1 + 1
 num_epochs = 100000
 num_hidden = 100
 num_layers = 1
-batch_size = 2
+batch_size = 6
 
 num_examples = 1
 num_batches_per_epoch = 10
@@ -31,6 +31,7 @@ audio = AudioReader(audio_dir=None,
                     sample_rate=sample_rate)
 
 file_logger = FileLogger('out.tsv', ['curr_epoch', 'train_cost', 'train_ler', 'val_cost', 'val_ler'])
+
 
 def next_batch(bs=batch_size, train=True):
     x_batch = []
@@ -71,6 +72,19 @@ def next_batch(bs=batch_size, train=True):
     # np.pad(x_batch[0], ((0, 0), (10, 0), (0, 0)), mode='constant', constant_values=0)
 
     return x_batch, y_batch, seq_len_batch, original_batch
+
+
+def decode(d, original, phase='training'):
+    for jj in range(batch_size):
+        values = d.values[np.where(d.indices[:, 0] == jj)[0]]
+        str_decoded = ''.join([chr(x) for x in np.asarray(values) + FIRST_INDEX])
+        # Replacing blank label to none
+        str_decoded = str_decoded.replace(chr(ord('z') + 1), '')
+        # Replacing space label to space
+        str_decoded = str_decoded.replace(chr(ord('a') - 1), ' ')
+
+        print('Original (%s) : %s' % (phase, original[jj]))
+        print('Decoded  (%s) : %s' % (phase, str_decoded))
 
 
 def run_ctc():
@@ -158,26 +172,12 @@ def run_ctc():
                         seq_len: train_seq_len}
 
                 batch_cost, _ = session.run([cost, optimizer], feed)
-                train_cost += batch_cost * batch_size
-                train_ler += session.run(ler, feed_dict=feed) * batch_size
+                train_cost += batch_cost / num_batches_per_epoch
+                train_ler += session.run(ler, feed_dict=feed) / num_batches_per_epoch
 
                 # Decoding
                 d = session.run(decoded[0], feed_dict=feed)
-                # sep = np.insert(np.where(np.diff(d.indices[:, 0]) == 1)[0] + 1, 0, 0)
-                # list(zip(sep, sep[1:]))
-                # decoded_values_list = [d[1][a[0]:a[1]] for a in list(zip(sep, sep[1:]))]
-                # decoded_values = decoded_values_list[0]  # only show the first one.
-                str_decoded = ''.join([chr(x) for x in np.asarray(d[1]) + FIRST_INDEX])
-                # Replacing blank label to none
-                str_decoded = str_decoded.replace(chr(ord('z') + 1), '')
-                # Replacing space label to space
-                str_decoded = str_decoded.replace(chr(ord('a') - 1), ' ')
-
-                print('Original (training) : %s' % '. '.join(original))
-                print('Decoded  (training) : %s' % str_decoded)
-
-            train_cost /= num_examples
-            train_ler /= num_examples
+                decode(d, original, phase='training')
 
             val_inputs, val_targets, val_seq_len, val_original = next_batch(train=False)
             val_feed = {inputs: val_inputs,
@@ -189,18 +189,7 @@ def run_ctc():
             # Decoding
             # np.where(np.diff(d.indices[:, 0]) == 1)
             d = session.run(decoded[0], feed_dict=val_feed)
-            # sep = np.insert(np.where(np.diff(d.indices[:, 0]) == 1)[0] + 1, 0, 0)
-            # list(zip(sep, sep[1:]))
-            # decoded_values_list = [d[1][a[0]:a[1]] for a in list(zip(sep, sep[1:]))]
-            # decoded_values = decoded_values_list[0]  # only show the first one.
-            str_decoded = ''.join([chr(x) for x in np.asarray(d[1]) + FIRST_INDEX])
-            # Replacing blank label to none
-            str_decoded = str_decoded.replace(chr(ord('z') + 1), '')
-            # Replacing space label to space
-            str_decoded = str_decoded.replace(chr(ord('a') - 1), ' ')
-
-            print('Original val (validation) : %s' % '. '.join(val_original))
-            print('Decoded val  (validation) : %s' % str_decoded)
+            decode(d, val_original, phase='validation')
 
             print('-' * 80)
             log = "Epoch {}/{}, train_cost = {:.3f}, train_ler = {:.3f}, " \
