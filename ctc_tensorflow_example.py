@@ -1,3 +1,4 @@
+import operator
 import random
 import time
 
@@ -37,8 +38,12 @@ file_logger = FileLogger('out.tsv', ['curr_epoch',
 
 
 def next_batch(train=True):
-    random_index = random.choice(list(audio.cache.keys())[0:5])
-    training_element = audio.cache[random_index]
+    ut_length_dict = dict([(k, len(v['target'])) for (k, v) in audio.cache.items()])
+    sorted(ut_length_dict.items(), key=operator.itemgetter(1))
+    max_utterances = 5
+    utterances = [a[0] for a in sorted(ut_length_dict.items(), key=operator.itemgetter(1))[0:max_utterances]]
+    random_utterance = random.choice(utterances)
+    training_element = audio.cache[random_utterance]
     target_text = training_element['target']
     if not train:
         l_shift = np.random.randint(low=1, high=1000)
