@@ -16,7 +16,7 @@ num_features = 13
 num_classes = ord('z') - ord('a') + 1 + 1 + 1
 
 # Hyper-parameters
-num_epochs = 10000
+num_epochs = 100000
 num_hidden = 100
 num_layers = 1
 batch_size = 1
@@ -25,15 +25,30 @@ num_examples = 1
 num_batches_per_epoch = int(num_examples / batch_size)
 
 # make sure the values match the ones in generate_audio_cache.py
-audio = AudioReader(audio_dir='cache',
+audio = AudioReader(audio_dir=None,
+                    cache_dir='cache',
                     sample_rate=sample_rate)
 
 file_logger = FileLogger('out.tsv', ['curr_epoch',
                                      'train_cost',
                                      'train_ler',
                                      'val_cost',
-                                     'val_ler',
-                                     'random_shift'])
+                                     'val_ler'])
+
+
+def next_batch(train=True):
+    random_index = random.choice(list(audio.cache.keys())[0:5])
+    training_element = audio.cache[random_index]
+    target_text = training_element['target']
+    if train:
+        l_shift = np.random.randint(low=1, high=1000)
+        audio_buffer = training_element['audio'][l_shift:]
+    else:
+        audio_buffer = training_element['audio']
+    x, y, seq_len, original = convert_inputs_to_ctc_format(audio_buffer,
+                                                           sample_rate,
+                                                           target_text)
+    return x, y, seq_len, original
 
 
 def run_ctc():
@@ -104,29 +119,6 @@ def run_ctc():
         ler = tf.reduce_mean(tf.edit_distance(tf.cast(decoded[0], tf.int32),
                                               targets))
 
-    def next_training_batch():
-        # random_index = random.choice(list(audio.cache.keys()))
-        # random_index = list(audio.cache.keys())[0]
-        random_index = random.choice(list(audio.cache.keys())[0:5])
-        training_element = audio.cache[random_index]
-        target_text = training_element['target']
-        train_inputs, train_targets, train_seq_len, original = convert_inputs_to_ctc_format(training_element['audio'],
-                                                                                            sample_rate,
-                                                                                            target_text)
-        return train_inputs, train_targets, train_seq_len, original
-
-    def next_testing_batch():
-        random_index = random.choice(list(audio.cache.keys())[0:5])
-        training_element = audio.cache[random_index]
-        target_text = training_element['target']
-        random_shift = np.random.randint(low=1, high=1000)
-        # print('random_shift =', random_shift)
-        truncated_audio = training_element['audio'][random_shift:]
-        train_inputs, train_targets, train_seq_len, original = convert_inputs_to_ctc_format(truncated_audio,
-                                                                                            sample_rate,
-                                                                                            target_text)
-        return train_inputs, train_targets, train_seq_len, original, random_shift
-
     with tf.Session(graph=graph) as session:
 
         tf.global_variables_initializer().run()
@@ -136,7 +128,7 @@ def run_ctc():
             start = time.time()
 
             for batch in range(num_batches_per_epoch):
-                train_inputs, train_targets, train_seq_len, original = next_training_batch()
+                train_inputs, train_targets, train_seq_len, original = next_batch(train=True)
                 feed = {inputs: train_inputs,
                         targets: train_targets,
                         seq_len: train_seq_len}
@@ -159,7 +151,7 @@ def run_ctc():
             train_cost /= num_examples
             train_ler /= num_examples
 
-            val_inputs, val_targets, val_seq_len, val_original, random_shift = next_testing_batch()
+            val_inputs, val_targets, val_seq_len, val_original = next_batch(train=False)
             val_feed = {inputs: val_inputs,
                         targets: val_targets,
                         seq_len: val_seq_len}
@@ -185,8 +177,7 @@ def run_ctc():
                                train_cost,
                                train_ler,
                                val_cost,
-                               val_ler,
-                               random_shift])
+                               val_ler])
 
             print(log.format(curr_epoch + 1, num_epochs, train_cost, train_ler,
                              val_cost, val_ler, time.time() - start))
