@@ -1,3 +1,4 @@
+import operator
 import random
 import time
 
@@ -31,15 +32,18 @@ audio = AudioReader(audio_dir=None,
 
 file_logger = FileLogger('out.tsv', ['curr_epoch', 'train_cost', 'train_ler', 'val_cost', 'val_ler'])
 
-
 def next_batch(bs=batch_size, train=True):
     x_batch = []
     y_batch = []
     seq_len_batch = []
     original_batch = []
     for k in range(bs):
-        random_index = random.choice(list(audio.cache.keys())[0:5])
-        training_element = audio.cache[random_index]
+        ut_length_dict = dict([(k, len(v['target'])) for (k, v) in audio.cache.items()])
+        utterances = sorted(ut_length_dict.items(), key=operator.itemgetter(1))
+        max_utterances = 20
+        utterances = [a[0] for a in utterances[0:max_utterances]]
+        random_utterance = random.choice(utterances)
+        training_element = audio.cache[random_utterance]
         target_text = training_element['target']
         if train:
             l_shift = np.random.randint(low=1, high=1000)
