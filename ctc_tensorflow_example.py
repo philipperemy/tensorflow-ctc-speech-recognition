@@ -1,13 +1,15 @@
+import random
 import time
 
 import numpy as np
 import tensorflow as tf
 
 from audio_reader import AudioReader
-from constants import c
 from file_logger import FileLogger
 from utils import FIRST_INDEX
+from utils import convert_inputs_to_ctc_format
 
+sample_rate = 8000
 # Some configs
 num_features = 13
 # Accounting the 0th index +  space + blank label = 28 characters
@@ -22,8 +24,9 @@ batch_size = 1
 num_examples = 1
 num_batches_per_epoch = int(num_examples / batch_size)
 
-audio = AudioReader(audio_dir=c.AUDIO.VCTK_CORPUS_PATH,
-                    sample_rate=c.AUDIO.SAMPLE_RATE)
+# make sure the values match the ones in generate_audio_cache.py
+audio = AudioReader(audio_dir='cache',
+                    sample_rate=sample_rate)
 
 file_logger = FileLogger('out.tsv', ['curr_epoch',
                                      'train_cost',
@@ -102,29 +105,25 @@ def run_ctc():
                                               targets))
 
     def next_training_batch():
-        import random
-        from utils import convert_inputs_to_ctc_format
         # random_index = random.choice(list(audio.cache.keys()))
         # random_index = list(audio.cache.keys())[0]
         random_index = random.choice(list(audio.cache.keys())[0:5])
         training_element = audio.cache[random_index]
         target_text = training_element['target']
         train_inputs, train_targets, train_seq_len, original = convert_inputs_to_ctc_format(training_element['audio'],
-                                                                                            c.AUDIO.SAMPLE_RATE,
+                                                                                            sample_rate,
                                                                                             target_text)
         return train_inputs, train_targets, train_seq_len, original
 
     def next_testing_batch():
-        import random
-        from utils import convert_inputs_to_ctc_format
         random_index = random.choice(list(audio.cache.keys())[0:5])
         training_element = audio.cache[random_index]
         target_text = training_element['target']
         random_shift = np.random.randint(low=1, high=1000)
-        print('random_shift =', random_shift)
+        # print('random_shift =', random_shift)
         truncated_audio = training_element['audio'][random_shift:]
         train_inputs, train_targets, train_seq_len, original = convert_inputs_to_ctc_format(truncated_audio,
-                                                                                            c.AUDIO.SAMPLE_RATE,
+                                                                                            sample_rate,
                                                                                             target_text)
         return train_inputs, train_targets, train_seq_len, original, random_shift
 
@@ -154,8 +153,8 @@ def run_ctc():
                 # Replacing space label to space
                 str_decoded = str_decoded.replace(chr(ord('a') - 1), ' ')
 
-                print('Original: %s' % original)
-                print('Decoded: %s' % str_decoded)
+                print('Original (training) : %s' % original)
+                print('Decoded  (training) : %s' % str_decoded)
 
             train_cost /= num_examples
             train_ler /= num_examples
@@ -175,9 +174,10 @@ def run_ctc():
             # Replacing space label to space
             str_decoded = str_decoded.replace(chr(ord('a') - 1), ' ')
 
-            print('Original val: %s' % val_original)
-            print('Decoded val: %s' % str_decoded)
+            print('Original val (validation) : %s' % val_original)
+            print('Decoded val  (validation) : %s' % str_decoded)
 
+            print('-' * 80)
             log = "Epoch {}/{}, train_cost = {:.3f}, train_ler = {:.3f}, " \
                   "val_cost = {:.3f}, val_ler = {:.3f}, time = {:.3f}"
 
