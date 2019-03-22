@@ -20,10 +20,10 @@ num_classes = ord('z') - ord('a') + 1 + 1 + 1
 num_epochs = 100000
 num_hidden = 100
 num_layers = 1
-batch_size = 60
+batch_size = 2
 
 num_examples = 1
-num_batches_per_epoch = 50
+num_batches_per_epoch = 10
 
 # make sure the values match the ones in generate_audio_cache.py
 audio = AudioReader(audio_dir=None,
@@ -173,7 +173,7 @@ def run_ctc():
                 # Replacing space label to space
                 str_decoded = str_decoded.replace(chr(ord('a') - 1), ' ')
 
-                print('Original (training) : %s' % ''.join(original))
+                print('Original (training) : %s' % '. '.join(original))
                 print('Decoded  (training) : %s' % str_decoded)
 
             train_cost /= num_examples
@@ -199,7 +199,7 @@ def run_ctc():
             # Replacing space label to space
             str_decoded = str_decoded.replace(chr(ord('a') - 1), ' ')
 
-            print('Original val (validation) : %s' % ''.join(val_original))
+            print('Original val (validation) : %s' % '. '.join(val_original))
             print('Decoded val  (validation) : %s' % str_decoded)
 
             print('-' * 80)
