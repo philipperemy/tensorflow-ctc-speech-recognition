@@ -6,10 +6,17 @@
 ```bash
 git clone https://github.com/philipperemy/tensorflow-ctc-speech-recognition.git ctc-speech
 cd ctc-speech
-sudo pip3 install -r requirements.txt
+pip3 install -r requirements.txt # inside a virtualenv
+
 # Download the VCTK Corpus here: http://homepages.inf.ed.ac.uk/jyamagis/page3/page58/page58.html
-wget http://homepages.inf.ed.ac.uk/jyamagis/release/VCTK-Corpus.tar.gz # 10GB!
-python3 generate_audio_cache.py
+# OR use this file (~65MB) that contains all the utterances for speaker p225.
+wget https://www.dropbox.com/s/xecprghgwbbuk3m/vctk-pc225.tar.gz
+tar xvzf vctk-pc225.tar.gz && rm -rf vctk-pc225.tar.gz
+python generate_audio_cache.py --audio_dir vctk-p225
+
+
+
+wget http://homepages.inf.ed.ac.uk/jyamagis/release/VCTK-Corpus.tar.gz # 10GB!l
 python3 ctc_tensorflow_example.py # to run the experiment defined in the section First Experiment.
 ```
 
