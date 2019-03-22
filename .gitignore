@@ -1,5 +1,6 @@
 *.swp
 *.swo
+vctk-p225/
 
 ### Python template
 # Byte-compiled / optimized / DLL files
