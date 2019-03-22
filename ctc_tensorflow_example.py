@@ -18,9 +18,9 @@ num_classes = ord('z') - ord('a') + 1 + 1 + 1
 
 # Hyper-parameters
 num_epochs = 100000
-num_hidden = 100
+num_hidden = 256
 num_layers = 1
-batch_size = 8
+batch_size = 16
 
 num_examples = 1
 num_batches_per_epoch = 10
@@ -41,8 +41,11 @@ def next_batch(bs=batch_size, train=True):
     for k in range(bs):
         ut_length_dict = dict([(k, len(v['target'])) for (k, v) in audio.cache.items()])
         utterances = sorted(ut_length_dict.items(), key=operator.itemgetter(1))
-        max_utterances = 20
-        utterances = [a[0] for a in utterances[0:max_utterances]]
+        max_utterances = 500
+        if train:
+            utterances = [a[0] for a in utterances[5:5 + max_utterances]]
+        else:
+            utterances = [a[0] for a in utterances[0:5]]
         random_utterance = random.choice(utterances)
         training_element = audio.cache[random_utterance]
         target_text = training_element['target']
@@ -150,7 +153,7 @@ def run_ctc():
 
         # optimizer = tf.train.AdamOptimizer().minimize(cost)
         # optimizer = tf.train.MomentumOptimizer(learning_rate=0.01, momentum=0.9).minimize(cost)
-        optimizer = tf.train.MomentumOptimizer(learning_rate=0.005, momentum=0.9).minimize(cost)
+        optimizer = tf.train.AdamOptimizer(learning_rate=5e-4).minimize(cost)
 
         # Option 2: tf.contrib.ctc.ctc_beam_search_decoder
         # (it's slower but you'll get better results)
