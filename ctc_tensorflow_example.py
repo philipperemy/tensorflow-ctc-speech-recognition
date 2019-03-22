@@ -22,7 +22,7 @@ num_layers = 1
 batch_size = 60
 
 num_examples = 1
-num_batches_per_epoch = int(num_examples / batch_size)
+num_batches_per_epoch = 50
 
 # make sure the values match the ones in generate_audio_cache.py
 audio = AudioReader(audio_dir=None,
@@ -159,17 +159,17 @@ def run_ctc():
 
                 # Decoding
                 d = session.run(decoded[0], feed_dict=feed)
-                sep = np.insert(np.where(np.diff(d.indices[:, 0]) == 1)[0] + 1, 0, 0)
-                list(zip(sep, sep[1:]))
-                decoded_values_list = [d[1][a[0]:a[1]] for a in list(zip(sep, sep[1:]))]
-                decoded_values = decoded_values_list[0]  # only show the first one.
-                str_decoded = ''.join([chr(x) for x in np.asarray(decoded_values) + FIRST_INDEX])
+                # sep = np.insert(np.where(np.diff(d.indices[:, 0]) == 1)[0] + 1, 0, 0)
+                # list(zip(sep, sep[1:]))
+                # decoded_values_list = [d[1][a[0]:a[1]] for a in list(zip(sep, sep[1:]))]
+                # decoded_values = decoded_values_list[0]  # only show the first one.
+                str_decoded = ''.join([chr(x) for x in np.asarray(d[1]) + FIRST_INDEX])
                 # Replacing blank label to none
                 str_decoded = str_decoded.replace(chr(ord('z') + 1), '')
                 # Replacing space label to space
                 str_decoded = str_decoded.replace(chr(ord('a') - 1), ' ')
 
-                print('Original (training) : %s' % original[0])
+                print('Original (training) : %s' % ''.join(original))
                 print('Decoded  (training) : %s' % str_decoded)
 
             train_cost /= num_examples
@@ -185,17 +185,17 @@ def run_ctc():
             # Decoding
             # np.where(np.diff(d.indices[:, 0]) == 1)
             d = session.run(decoded[0], feed_dict=val_feed)
-            sep = np.insert(np.where(np.diff(d.indices[:, 0]) == 1)[0] + 1, 0, 0)
-            list(zip(sep, sep[1:]))
-            decoded_values_list = [d[1][a[0]:a[1]] for a in list(zip(sep, sep[1:]))]
-            decoded_values = decoded_values_list[0]  # only show the first one.
-            str_decoded = ''.join([chr(x) for x in np.asarray(decoded_values) + FIRST_INDEX])
+            # sep = np.insert(np.where(np.diff(d.indices[:, 0]) == 1)[0] + 1, 0, 0)
+            # list(zip(sep, sep[1:]))
+            # decoded_values_list = [d[1][a[0]:a[1]] for a in list(zip(sep, sep[1:]))]
+            # decoded_values = decoded_values_list[0]  # only show the first one.
+            str_decoded = ''.join([chr(x) for x in np.asarray(d[1]) + FIRST_INDEX])
             # Replacing blank label to none
             str_decoded = str_decoded.replace(chr(ord('z') + 1), '')
             # Replacing space label to space
             str_decoded = str_decoded.replace(chr(ord('a') - 1), ' ')
 
-            print('Original val (validation) : %s' % val_original[0])
+            print('Original val (validation) : %s' % ''.join(val_original))
             print('Decoded val  (validation) : %s' % str_decoded)
 
             print('-' * 80)
