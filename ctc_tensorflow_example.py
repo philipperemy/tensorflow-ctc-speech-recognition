@@ -20,7 +20,7 @@ num_classes = ord('z') - ord('a') + 1 + 1 + 1
 num_epochs = 100000
 num_hidden = 100
 num_layers = 1
-batch_size = 2
+batch_size = 8
 
 num_examples = 1
 num_batches_per_epoch = 10
@@ -31,6 +31,7 @@ audio = AudioReader(audio_dir=None,
                     sample_rate=sample_rate)
 
 file_logger = FileLogger('out.tsv', ['curr_epoch', 'train_cost', 'train_ler', 'val_cost', 'val_ler'])
+
 
 def next_batch(bs=batch_size, train=True):
     x_batch = []
@@ -72,6 +73,22 @@ def next_batch(bs=batch_size, train=True):
 
     return x_batch, y_batch, seq_len_batch, original_batch
 
+
+def decode_batch(d, original, phase='training'):
+    aligned_original_string = ''
+    aligned_decoded_string = ''
+    for jj in range(batch_size)[0:2]: # just for visualisation purposes. we display only 2.
+        values = d.values[np.where(d.indices[:, 0] == jj)[0]]
+        str_decoded = ''.join([chr(x) for x in np.asarray(values) + FIRST_INDEX])
+        # Replacing blank label to none
+        str_decoded = str_decoded.replace(chr(ord('z') + 1), '')
+        # Replacing space label to space
+        str_decoded = str_decoded.replace(chr(ord('a') - 1), ' ')
+        maxlen = max(len(original[jj]), len(str_decoded))
+        aligned_original_string += str(original[jj]).ljust(maxlen) + ' | '
+        aligned_decoded_string += str(str_decoded).ljust(maxlen) + ' | '
+    print('- Original (%s) : %s ...' % (phase, aligned_original_string))
+    print('- Decoded  (%s) : %s ...' % (phase, aligned_decoded_string))
 
 def run_ctc():
     graph = tf.Graph()
@@ -157,27 +174,10 @@ def run_ctc():
                         targets: train_targets,
                         seq_len: train_seq_len}
 
-                batch_cost, _ = session.run([cost, optimizer], feed)
-                train_cost += batch_cost * batch_size
-                train_ler += session.run(ler, feed_dict=feed) * batch_size
-
-                # Decoding
-                d = session.run(decoded[0], feed_dict=feed)
-                # sep = np.insert(np.where(np.diff(d.indices[:, 0]) == 1)[0] + 1, 0, 0)
-                # list(zip(sep, sep[1:]))
-                # decoded_values_list = [d[1][a[0]:a[1]] for a in list(zip(sep, sep[1:]))]
-                # decoded_values = decoded_values_list[0]  # only show the first one.
-                str_decoded = ''.join([chr(x) for x in np.asarray(d[1]) + FIRST_INDEX])
-                # Replacing blank label to none
-                str_decoded = str_decoded.replace(chr(ord('z') + 1), '')
-                # Replacing space label to space
-                str_decoded = str_decoded.replace(chr(ord('a') - 1), ' ')
-
-                print('Original (training) : %s' % '. '.join(original))
-                print('Decoded  (training) : %s' % str_decoded)
-
-            train_cost /= num_examples
-            train_ler /= num_examples
+                batch_cost, _, train_ler_p, d = session.run([cost, optimizer, ler, decoded[0]], feed)
+                train_cost += batch_cost / num_batches_per_epoch
+                train_ler += train_ler_p / num_batches_per_epoch
+                decode_batch(d, original, phase='training')
 
             val_inputs, val_targets, val_seq_len, val_original = next_batch(train=False)
             val_feed = {inputs: val_inputs,
@@ -189,18 +189,7 @@ def run_ctc():
             # Decoding
             # np.where(np.diff(d.indices[:, 0]) == 1)
             d = session.run(decoded[0], feed_dict=val_feed)
-            # sep = np.insert(np.where(np.diff(d.indices[:, 0]) == 1)[0] + 1, 0, 0)
-            # list(zip(sep, sep[1:]))
-            # decoded_values_list = [d[1][a[0]:a[1]] for a in list(zip(sep, sep[1:]))]
-            # decoded_values = decoded_values_list[0]  # only show the first one.
-            str_decoded = ''.join([chr(x) for x in np.asarray(d[1]) + FIRST_INDEX])
-            # Replacing blank label to none
-            str_decoded = str_decoded.replace(chr(ord('z') + 1), '')
-            # Replacing space label to space
-            str_decoded = str_decoded.replace(chr(ord('a') - 1), ' ')
-
-            print('Original val (validation) : %s' % '. '.join(val_original))
-            print('Decoded val  (validation) : %s' % str_decoded)
+            decode_batch(d, val_original, phase='validation')
 
             print('-' * 80)
             log = "Epoch {}/{}, train_cost = {:.3f}, train_ler = {:.3f}, " \
