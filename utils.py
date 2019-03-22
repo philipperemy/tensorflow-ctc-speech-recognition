@@ -33,10 +33,7 @@ def convert_inputs_to_ctc_format(audio, fs, target_text, num_features):
     targets = np.asarray([SPACE_INDEX if x == SPACE_TOKEN else ord(x) - FIRST_INDEX
                           for x in targets])
 
-    # Creating sparse representation to feed the placeholder
-    train_targets = sparse_tuple_from([targets])
-
-    return train_inputs, train_targets, train_seq_len, original
+    return train_inputs, targets, train_seq_len, original
 
 
 def sparse_tuple_from(sequences, dtype=np.int32):

@@ -6,7 +6,7 @@ import tensorflow as tf
 
 from audio_reader import AudioReader
 from file_logger import FileLogger
-from utils import FIRST_INDEX
+from utils import FIRST_INDEX, sparse_tuple_from
 from utils import convert_inputs_to_ctc_format
 
 sample_rate = 8000
@@ -19,7 +19,7 @@ num_classes = ord('z') - ord('a') + 1 + 1 + 1
 num_epochs = 100000
 num_hidden = 100
 num_layers = 1
-batch_size = 1
+batch_size = 60
 
 num_examples = 1
 num_batches_per_epoch = int(num_examples / batch_size)
@@ -29,27 +29,44 @@ audio = AudioReader(audio_dir=None,
                     cache_dir='cache',
                     sample_rate=sample_rate)
 
-file_logger = FileLogger('out.tsv', ['curr_epoch',
-                                     'train_cost',
-                                     'train_ler',
-                                     'val_cost',
-                                     'val_ler'])
+file_logger = FileLogger('out.tsv', ['curr_epoch', 'train_cost', 'train_ler', 'val_cost', 'val_ler'])
 
 
-def next_batch(train=True):
-    random_index = random.choice(list(audio.cache.keys())[0:5])
-    training_element = audio.cache[random_index]
-    target_text = training_element['target']
-    if train:
-        l_shift = np.random.randint(low=1, high=1000)
-        audio_buffer = training_element['audio'][l_shift:]
-    else:
-        audio_buffer = training_element['audio']
-    x, y, seq_len, original = convert_inputs_to_ctc_format(audio_buffer,
-                                                           sample_rate,
-                                                           target_text,
-                                                           num_features)
-    return x, y, seq_len, original
+def next_batch(bs=batch_size, train=True):
+    x_batch = []
+    y_batch = []
+    seq_len_batch = []
+    original_batch = []
+    for k in range(bs):
+        random_index = random.choice(list(audio.cache.keys())[0:5])
+        training_element = audio.cache[random_index]
+        target_text = training_element['target']
+        if train:
+            l_shift = np.random.randint(low=1, high=1000)
+            audio_buffer = training_element['audio'][l_shift:]
+        else:
+            audio_buffer = training_element['audio']
+        x, y, seq_len, original = convert_inputs_to_ctc_format(audio_buffer,
+                                                               sample_rate,
+                                                               target_text,
+                                                               num_features)
+        x_batch.append(x)
+        y_batch.append(y)
+        seq_len_batch.append(seq_len)
+        original_batch.append(original)
+
+    # Creating sparse representation to feed the placeholder
+    # inputs = np.concatenate(x_batch, axis=0)
+    y_batch = sparse_tuple_from(y_batch)
+    seq_len_batch = np.array(seq_len_batch)[:, 0]
+    for i, pad in enumerate(np.max(seq_len_batch) - seq_len_batch):
+        x_batch[i] = np.pad(x_batch[i], ((0, 0), (0, pad), (0, 0)), mode='constant', constant_values=0)
+
+    x_batch = np.concatenate(x_batch, axis=0)
+    # return np.array(list(x_batch[0]) * batch_size), y_batch, np.array(seq_len_batch[0] * batch_size), original_batch
+    # np.pad(x_batch[0], ((0, 0), (10, 0), (0, 0)), mode='constant', constant_values=0)
+
+    return x_batch, y_batch, seq_len_batch, original_batch
 
 
 def run_ctc():
@@ -58,14 +75,16 @@ def run_ctc():
         # e.g: log filter bank or MFCC features
         # Has size [batch_size, max_step_size, num_features], but the
         # batch_size and max_step_size can vary along each step
-        inputs = tf.placeholder(tf.float32, [None, None, num_features])
+        inputs = tf.placeholder(tf.float32, [None, None, num_features], name='inputs')
 
         # Here we use sparse_placeholder that will generate a
         # SparseTensor required by ctc_loss op.
-        targets = tf.sparse_placeholder(tf.int32)
+        # https://www.tensorflow.org/api_docs/python/tf/sparse/SparseTensor
+        # https://www.tensorflow.org/api_docs/python/tf/nn/ctc_loss
+        targets = tf.sparse_placeholder(tf.int32, name='targets')
 
         # 1d array of size [batch_size]
-        seq_len = tf.placeholder(tf.int32, [None])
+        seq_len = tf.placeholder(tf.int32, [None], name='seq_len')
 
         # Defining the cell
         # Can be:
@@ -140,13 +159,17 @@ def run_ctc():
 
                 # Decoding
                 d = session.run(decoded[0], feed_dict=feed)
-                str_decoded = ''.join([chr(x) for x in np.asarray(d[1]) + FIRST_INDEX])
+                sep = np.insert(np.where(np.diff(d.indices[:, 0]) == 1)[0] + 1, 0, 0)
+                list(zip(sep, sep[1:]))
+                decoded_values_list = [d[1][a[0]:a[1]] for a in list(zip(sep, sep[1:]))]
+                decoded_values = decoded_values_list[0]  # only show the first one.
+                str_decoded = ''.join([chr(x) for x in np.asarray(decoded_values) + FIRST_INDEX])
                 # Replacing blank label to none
                 str_decoded = str_decoded.replace(chr(ord('z') + 1), '')
                 # Replacing space label to space
                 str_decoded = str_decoded.replace(chr(ord('a') - 1), ' ')
 
-                print('Original (training) : %s' % original)
+                print('Original (training) : %s' % original[0])
                 print('Decoded  (training) : %s' % str_decoded)
 
             train_cost /= num_examples
@@ -160,14 +183,19 @@ def run_ctc():
             val_cost, val_ler = session.run([cost, ler], feed_dict=val_feed)
 
             # Decoding
+            # np.where(np.diff(d.indices[:, 0]) == 1)
             d = session.run(decoded[0], feed_dict=val_feed)
-            str_decoded = ''.join([chr(x) for x in np.asarray(d[1]) + FIRST_INDEX])
+            sep = np.insert(np.where(np.diff(d.indices[:, 0]) == 1)[0] + 1, 0, 0)
+            list(zip(sep, sep[1:]))
+            decoded_values_list = [d[1][a[0]:a[1]] for a in list(zip(sep, sep[1:]))]
+            decoded_values = decoded_values_list[0]  # only show the first one.
+            str_decoded = ''.join([chr(x) for x in np.asarray(decoded_values) + FIRST_INDEX])
             # Replacing blank label to none
             str_decoded = str_decoded.replace(chr(ord('z') + 1), '')
             # Replacing space label to space
             str_decoded = str_decoded.replace(chr(ord('a') - 1), ' ')
 
-            print('Original val (validation) : %s' % val_original)
+            print('Original val (validation) : %s' % val_original[0])
             print('Decoded val  (validation) : %s' % str_decoded)
 
             print('-' * 80)
