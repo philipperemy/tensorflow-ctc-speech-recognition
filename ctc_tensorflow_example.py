@@ -18,9 +18,8 @@ num_classes = ord('z') - ord('a') + 1 + 1 + 1
 
 # Hyper-parameters
 num_epochs = 100000
-num_hidden = 100
-num_layers = 1
-batch_size = 8
+num_hidden = 256
+batch_size = 16
 
 num_examples = 1
 num_batches_per_epoch = 10
@@ -41,8 +40,11 @@ def next_batch(bs=batch_size, train=True):
     for k in range(bs):
         ut_length_dict = dict([(k, len(v['target'])) for (k, v) in audio.cache.items()])
         utterances = sorted(ut_length_dict.items(), key=operator.itemgetter(1))
-        max_utterances = 20
-        utterances = [a[0] for a in utterances[0:max_utterances]]
+        test_index = 15
+        if train:
+            utterances = [a[0] for a in utterances[test_index:]]
+        else:
+            utterances = [a[0] for a in utterances[:test_index]]
         random_utterance = random.choice(utterances)
         training_element = audio.cache[random_utterance]
         target_text = training_element['target']
@@ -77,7 +79,7 @@ def next_batch(bs=batch_size, train=True):
 def decode_batch(d, original, phase='training'):
     aligned_original_string = ''
     aligned_decoded_string = ''
-    for jj in range(batch_size)[0:2]: # just for visualisation purposes. we display only 2.
+    for jj in range(batch_size)[0:2]:  # just for visualisation purposes. we display only 2.
         values = d.values[np.where(d.indices[:, 0] == jj)[0]]
         str_decoded = ''.join([chr(x) for x in np.asarray(values) + FIRST_INDEX])
         # Replacing blank label to none
@@ -89,6 +91,7 @@ def decode_batch(d, original, phase='training'):
         aligned_decoded_string += str(str_decoded).ljust(maxlen) + ' | '
     print('- Original (%s) : %s ...' % (phase, aligned_original_string))
     print('- Decoded  (%s) : %s ...' % (phase, aligned_decoded_string))
+
 
 def run_ctc():
     graph = tf.Graph()
@@ -114,8 +117,7 @@ def run_ctc():
         cell = tf.contrib.rnn.LSTMCell(num_hidden, state_is_tuple=True)
 
         # Stacking rnn cells
-        stack = tf.contrib.rnn.MultiRNNCell([cell] * num_layers,
-                                            state_is_tuple=True)
+        stack = tf.contrib.rnn.MultiRNNCell([cell], state_is_tuple=True)
 
         # The second output is the last state and we will no use that
         outputs, _ = tf.nn.dynamic_rnn(stack, inputs, seq_len, dtype=tf.float32)
@@ -150,7 +152,7 @@ def run_ctc():
 
         # optimizer = tf.train.AdamOptimizer().minimize(cost)
         # optimizer = tf.train.MomentumOptimizer(learning_rate=0.01, momentum=0.9).minimize(cost)
-        optimizer = tf.train.MomentumOptimizer(learning_rate=0.005, momentum=0.9).minimize(cost)
+        optimizer = tf.train.AdamOptimizer(learning_rate=5e-4).minimize(cost)
 
         # Option 2: tf.contrib.ctc.ctc_beam_search_decoder
         # (it's slower but you'll get better results)
