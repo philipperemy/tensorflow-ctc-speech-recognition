@@ -136,7 +136,12 @@ Epoch 2723/3000, train_cost = 1.108, train_ler = 0.000, val_cost = 59.116, val_l
 - Decoded  (validation) : it is a cot ase    
 ```
 
-Here, it's interesting because the network can generalize **reasonably well** on completely unseen audio files (of the same speaker).
+<p align="center">
+  <b>LER Loss</b><br>
+  <img src="veusz/exp2.png" width="600">
+</p>
+
+This experiment is interesting. The network seems to generalize a bit on unseen audio files (of the same speaker). I didn't expect the network to perform well on such a small dataset. However, let's keep in mind that the generalization power is quite poor here. It's overfitting as well.
 
 ## Special Thanks
 - Igor Maceda for providing the basic scripts here [ctc_tensorflow_example](https://github.com/igormq/ctc_tensorflow_example)
