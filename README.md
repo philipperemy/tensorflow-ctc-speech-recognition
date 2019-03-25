@@ -108,7 +108,7 @@ Clearly we can see that the network learns very well on just 5 sentences! It's f
 - Only one speaker: p225.
 - 15 shortest utterances used as testing set.
 - Rest used as training set.
-- Can now define a batch size.
+- Can now define a batch size different than 1.
 
 ```
 Epoch 2723/3000, train_cost = 1.108, train_ler = 0.000, val_cost = 59.116, val_ler = 0.467, time = 2.559
