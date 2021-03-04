@@ -1,4 +1,5 @@
 # Tensorflow CTC Speech Recognition
+- Compatible with Tensorflow through v1 compat.
 - Application of Connectionist Temporal Classification (CTC) for Speech Recognition (Tensorflow 1.0) 
 - On the VCTK Corpus (same corpus as the one used by WaveNet).
 
