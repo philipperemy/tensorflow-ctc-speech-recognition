@@ -15,7 +15,7 @@ def get_script_arguments():
     args = ArgumentParser()
     args.add_argument('--audio_dir', required=True)
     args.add_argument('--output_dir', default='cache', type=ensure_dir)
-    args.add_argument('--sample_rate', default=8000, type=int)
+    args.add_argument('--sample_rate', default=16000, type=int)
     args.add_argument('--speakers_sub_list', default='p225')  # example: p225,p226,p227
     return args.parse_args()
 
